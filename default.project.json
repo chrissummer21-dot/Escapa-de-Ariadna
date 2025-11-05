@@ -1,0 +1,20 @@
+{
+  "name": "BackroomsProject",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Modules": {
+        "$className": "Folder",
+        "Backrooms": {
+          "$className": "Folder",
+          "$path": "src/ReplicatedStorage/Modules/Backrooms"
+        }
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "$path": "src/ServerScriptService"
+    }
+  }
+}
