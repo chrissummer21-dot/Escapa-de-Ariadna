@@ -2,19 +2,27 @@
   "name": "BackroomsProject",
   "tree": {
     "$className": "DataModel",
+    "$ignoreUnknownInstances": true,
+
     "ReplicatedStorage": {
       "$className": "ReplicatedStorage",
+      "$ignoreUnknownInstances": true,
+
       "Modules": {
-        "$className": "Folder",
-        "Backrooms": {
-          "$className": "Folder",
-          "$path": "src/ReplicatedStorage/Modules/Backrooms"
-        }
+        "$path": "src/ReplicatedStorage/Modules",
+        "$ignoreUnknownInstances": true
+      },
+
+      "Configs": {
+        "$path": "src/ReplicatedStorage/Configs",
+        "$ignoreUnknownInstances": true
       }
     },
+
     "ServerScriptService": {
       "$className": "ServerScriptService",
-      "$path": "src/ServerScriptService"
+      "$path": "src/ServerScriptService",
+      "$ignoreUnknownInstances": true
     }
   }
 }
