@@ -23,6 +23,8 @@ end
 
 local function makeId(inst: LightInstance): LampId
 	return inst:GetFullName()
+end -- <-- CORRECCIÓN DE SINTAXIS: Faltaba este 'end'
+
 function LightController.new()
 	local self = setmetatable({}, LightController)
 	self._byId = {} :: {[LampId]: LampRecord}
