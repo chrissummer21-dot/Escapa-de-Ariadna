@@ -46,6 +46,10 @@ function TimingController.new(opts: Opts)
 	-- Evento para terceros (opcional)
 	self.CueFired = Instance.new("BindableEvent")
 
+	-- === CORRECCIÓN DE LÓGICA ===
+	-- Mover el registro de handlers aquí, DESPUÉS de que self._handlers se haya creado.
+	self:_registerDefaultMusicHandlers()
+
 	return self
 end
 
@@ -177,7 +181,6 @@ function TimingController:Dispose()
 	self.CueFired:Destroy()
 end
 
--- Registrar handlers base de música al crear
-TimingController._registerDefaultMusicHandlers(TimingController)
+-- (Línea movida a la función .new())
 
 return TimingController

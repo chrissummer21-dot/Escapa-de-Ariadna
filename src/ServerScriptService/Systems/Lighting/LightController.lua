@@ -22,9 +22,7 @@ local function isLight(inst: Instance): boolean
 end
 
 local function makeId(inst: LightInstance): LampId
-	return ("%s|%s|%d"):format(inst:GetFullName(), inst.Name, inst:GetDebugId())
-end
-
+	return inst:GetFullName()
 function LightController.new()
 	local self = setmetatable({}, LightController)
 	self._byId = {} :: {[LampId]: LampRecord}
@@ -34,7 +32,7 @@ function LightController.new()
 end
 
 function LightController:Register(inst: Instance, group: string?)
-	assert(isLight(inst), "Instancia no es una luz vÃƒÂ¡lida")
+	assert(isLight(inst), "Instancia no es una luz válida")
 	local light = inst :: LightInstance
 	local id = makeId(light)
 	if self._byId[id] then return id end
@@ -75,7 +73,7 @@ function LightController:RegisterTag(tagName: string, groupFromParent: boolean?)
 	end)
 end
 
--- ===== Acciones bÃƒÂ¡sicas =====
+-- ===== Acciones básicas =====
 function LightController:On(target: LampId | Instance)
 	local rec = typeof(target) == "Instance" and self._byInst[target] or self._byId[target]
 	if rec then rec.inst.Enabled = true end

@@ -1,16 +1,16 @@
 -- Arranque de ejemplo: carga config, arma LightController y TimingController,
--- registra acciones de luces y de eventos genÃƒÂ©ricos, y corre el timeline.
+-- registra acciones de luces y de eventos genéricos, y corre el timeline.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GameTimingConfig = require(ReplicatedStorage:WaitForChild("Configs"):WaitForChild("GameTimingConfig"))
 
--- LÃNEAS NUEVAS Y CORREGIDAS:
+-- LÍNEAS NUEVAS Y CORREGIDAS:
 local LightController = require(script.Parent.Parent:WaitForChild("Systems"):WaitForChild("Lighting"):WaitForChild("LightController"))
 local TimingController = require(script.Parent.Parent:WaitForChild("Systems"):WaitForChild("Timing"):WaitForChild("TimingController"))
 
 -- 1) Instanciar controladores
 local lights = LightController.new()
--- Registra luces por tag (si quieres agrupar por nombre del padre, pasa true como 2Ã‚Âº arg)
+-- Registra luces por tag (si quieres agrupar por nombre del padre, pasa true como 2º arg)
 lights:RegisterTag(GameTimingConfig.LightTag, true)
 
 local timing = TimingController.new({
@@ -21,13 +21,13 @@ local timing = TimingController.new({
 	MainMusic = GameTimingConfig.MainMusic,
 })
 
--- 2) Handlers de luces (nombres de acciÃƒÂ³n que usarÃƒÂ¡ el timeline)
+-- 2) Handlers de luces (nombres de acción que usará el timeline)
 timing:OnAction("lights:all_on", function() lights:AllOn() end)
 timing:OnAction("lights:all_off", function() lights:AllOff() end)
 timing:OnAction("lights:group_on", function(p) if p and p.group then lights:GroupOn(p.group) end end)
 timing:OnAction("lights:group_off", function(p) if p and p.group then lights:GroupOff(p.group) end end)
 
--- TambiÃƒÂ©n propiedades (opcional)
+-- También propiedades (opcional)
 timing:OnAction("lights:set_brightness", function(p)
 	if p and p.target and p.value then lights:SetBrightness(p.target, p.value) end
 end)
@@ -38,10 +38,10 @@ timing:OnAction("lights:set_color", function(p)
 	end
 end)
 
--- 3) Events genÃƒÂ©ricos (para UI, letreros, triggers, etc.)
+-- 3) Events genéricos (para UI, letreros, triggers, etc.)
 timing:OnAction("event:announce", function(p)
 	print("[ANNOUNCE]", p and p.message or "(sin mensaje)")
-	-- AquÃƒÂ­ podrÃƒÂ­as disparar RemoteEvents a clientes, UI, etc.
+	-- Aquí podrías disparar RemoteEvents a clientes, UI, etc.
 end)
 
 -- 4) Ejecutar timeline
