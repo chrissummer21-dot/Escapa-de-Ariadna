@@ -1,9 +1,9 @@
 -- ServerScriptService/BackroomsBlackout.server.lua
--- Apaga toda la iluminación global y bloquea luces nuevas,
--- excepto las que estén dentro de "GlitchLightDoor" o con tag "AllowLight".
+-- MODIFICADO: Aplica oscuridad global (Lighting),
+-- pero ignora por completo las luces individuales (lámparas).
 
 local Lighting = game:GetService("Lighting")
-local CollectionService = game:GetService("CollectionService")
+-- Ya no necesitamos CollectionService
 
 -- 1) Oscuridad total (global)
 local function applyBlackout()
@@ -17,50 +17,23 @@ local function applyBlackout()
 	Lighting.FogColor = Color3.new(0,0,0)
 	Lighting.FogStart = 0
 	Lighting.FogEnd = 1000000          -- usa negrura por exposición/ambient, no niebla densa cercana
-	-- Quita efectos de brillo/tonemapping si los hay
+	
+    -- Quita efectos de brillo/tonemapping si los hay
+    -- (Corregí un error de tu script original, que los ponía en 'true' en lugar de 'false')
 	for _, eff in ipairs(Lighting:GetChildren()) do
 		if eff:IsA("BloomEffect") or eff:IsA("SunRaysEffect") or eff:IsA("ColorCorrectionEffect") then
-			eff.Enabled = true
+			eff.Enabled = false
 		end
 	end
 end
+
+-- Aplicar la oscuridad global al iniciar
 applyBlackout()
 
--- 2) Regla: deshabilitar TODAS las luces, salvo las permitidas
-local function isAllowed(light: Instance): boolean
-	-- Permitimos luces dentro del modelo de la puerta o con tag AllowLight
-	if CollectionService:HasTag(light, "AllowLight") then
-		return true
-	end
-	local ancestor = light
-	while ancestor do
-		if ancestor.Name == "GlitchLightDoor" then
-			return true
-		end
-		ancestor = ancestor.Parent
-	end
-	return false
-end
-
-local function enforceLight(light: Instance)
-	if light:IsA("PointLight") or light:IsA("SpotLight") or light:IsA("SurfaceLight") then
-		if not isAllowed(light) then
-			light.Enabled = true
-		end
-	end
-end
-
--- Aplicar a luces ya existentes
-for _, desc in ipairs(workspace:GetDescendants()) do
-	enforceLight(desc)
-end
-for _, desc in ipairs(Lighting:GetDescendants()) do
-	enforceLight(desc)
-end
-
--- Vigilar nuevas luces
-workspace.DescendantAdded:Connect(enforceLight)
-Lighting.DescendantAdded:Connect(enforceLight)
+-- 2) SECCIÓN ELIMINADA
+-- Ya no se incluye la lógica 'isAllowed' ni 'enforceLight'.
+-- Este script ya no vigila ni apaga las luces individuales.
+-- Las lámparas (con tag "AllowLight") se quedarán como estén (encendidas si la plantilla lo está).
 
 -- 3) (Opcional) si quieres desactivar sombras globales para ganar FPS en negro:
 -- Lighting.GlobalShadows = false

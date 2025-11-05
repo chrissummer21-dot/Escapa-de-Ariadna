@@ -163,7 +163,7 @@ local function tagAllLightsDeep(root)
 				CollectionService:AddTag(d, "AllowLight")
 			end
 			-- ==== LÍNEA MODIFICADA ====
-			d.Enabled = false -- Iniciar apagadas
+			'd.Enabled = true -- Iniciar apagadas
 			-- ========================
 		end
 	end
