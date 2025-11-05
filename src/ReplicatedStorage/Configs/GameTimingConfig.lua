@@ -13,11 +13,15 @@ local GameTimingConfig = {
 	-- Puedes añadir/editar cues a voluntad.
 	Timeline = {
 		{ t = 0.0,  action = "music:play",  params = { soundId = "inherit", volume = "inherit", looped = true } },
-		{ t = 0.0,  action = "lights:all_on" },
+		
+		-- ==== LÍNEAS MODIFICADAS ====
+		{ t = 0.0,  action = "lights:group_on",  params = { group = "CeilingLamps" } }, -- Enciende solo las lámparas del techo
+		{ t = 30.0, action = "lights:group_off", params = { group = "CeilingLamps" } }, -- Apaga solo las lámparas del techo
+		-- ============================
+
 		{ t = 5.0,  action = "lights:group_on",  params = { group = "EscenaA" } },
 		{ t = 20.0, action = "event:announce",    params = { message = "¡Prepárense para el clímax!" } },
 		{ t = 28.0, action = "music:fade",  params = { toVolume = 0.15, duration = 2.0 } },
-		{ t = 30.0, action = "lights:all_off" }, -- equivalente al "auto-off" de 30s, pero desde el timeline
 		{ t = 32.0, action = "music:stop" },
 	},
 

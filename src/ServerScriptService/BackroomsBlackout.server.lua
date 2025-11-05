@@ -1,6 +1,6 @@
 -- ServerScriptService/BackroomsBlackout.server.lua
--- Apaga toda la iluminaciÃ³n global y bloquea luces nuevas,
--- excepto las que estÃ©n dentro de "GlitchLightDoor" o con tag "AllowLight".
+-- Apaga toda la iluminación global y bloquea luces nuevas,
+-- excepto las que estén dentro de "GlitchLightDoor" o con tag "AllowLight".
 
 local Lighting = game:GetService("Lighting")
 local CollectionService = game:GetService("CollectionService")
@@ -16,11 +16,11 @@ local function applyBlackout()
 	Lighting.ExposureCompensation = -2.0  -- empuja a negro
 	Lighting.FogColor = Color3.new(0,0,0)
 	Lighting.FogStart = 0
-	Lighting.FogEnd = 1000000          -- usa negrura por exposiciÃ³n/ambient, no niebla densa cercana
+	Lighting.FogEnd = 1000000          -- usa negrura por exposición/ambient, no niebla densa cercana
 	-- Quita efectos de brillo/tonemapping si los hay
 	for _, eff in ipairs(Lighting:GetChildren()) do
 		if eff:IsA("BloomEffect") or eff:IsA("SunRaysEffect") or eff:IsA("ColorCorrectionEffect") then
-			eff.Enabled = false
+			eff.Enabled = true
 		end
 	end
 end
@@ -44,7 +44,9 @@ end
 
 local function enforceLight(light: Instance)
 	if light:IsA("PointLight") or light:IsA("SpotLight") or light:IsA("SurfaceLight") then
-		light.Enabled = isAllowed(light)
+		if not isAllowed(light) then
+			light.Enabled = true
+		end
 	end
 end
 

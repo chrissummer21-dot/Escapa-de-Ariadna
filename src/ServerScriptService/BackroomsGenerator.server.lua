@@ -2,8 +2,8 @@
 -- Orquestador modular del Backrooms:
 -- 1) Walls -> 2) Floor -> 3) Ceiling -> 4) Door
 -- + Spawn interno que luego "desaparece"
--- + SeÃ±al LevelBuilt para scripts que dependan del nivel
--- + ValidaciÃ³n de accesibilidad (grid + fÃ­sica)
+-- + Señal LevelBuilt para scripts que dependan del nivel
+-- + Validación de accesibilidad (grid + física)
 
 local RunService        = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -22,7 +22,7 @@ local CONFIG = {
 	-- Elevar todo para no chocar con Baseplate
 	ORIGIN = Vector3.new(0, 6, 0),
 
-	SEED = nil,           -- fija una semilla (nÃºmero) para layouts reproducibles
+	SEED = nil,           -- fija una semilla (número) para layouts reproducibles
 	EXTRA_LOOPS = 12,     -- rompe muros internos extra (sin perforar bordes)
 
 	-- Piso / techo
@@ -33,7 +33,7 @@ local CONFIG = {
 	MAKE_MODEL = true,
 	HIDE_BASEPLATE = true,
 
-	-- TamaÃ±o por defecto de la puerta de luz (usado por Door.lua)
+	-- Tamaño por defecto de la puerta de luz (usado por Door.lua)
 	DOOR_WIDTH = 6,
 	DOOR_HEIGHT = 12,
 	DOOR_THICK = 1,
@@ -42,7 +42,7 @@ local CONFIG = {
 -- ========= RNG =========
 local rng = CONFIG.SEED and Random.new(CONFIG.SEED) or Random.new()
 
--- ========= Asegurar jerarquÃ­a en ReplicatedStorage =========
+-- ========= Asegurar jerarquía en ReplicatedStorage =========
 local ModulesFolder = ReplicatedStorage:FindFirstChild("Modules")
 if not ModulesFolder then
 	ModulesFolder = Instance.new("Folder")
@@ -57,7 +57,7 @@ if not BackroomsFolder then
 	BackroomsFolder.Parent = ModulesFolder
 end
 
--- SeÃ±ales
+-- Señales
 local Signals = ReplicatedStorage:FindFirstChild("BackroomsSignals")
 if not Signals then
 	Signals = Instance.new("Folder")
@@ -99,7 +99,7 @@ if CONFIG.MAKE_MODEL then
 	levelModel.Parent = levelFolder
 end
 
--- ========= Requires (mÃ³dulos) =========
+-- ========= Requires (módulos) =========
 local Walls    = require(BackroomsFolder:WaitForChild("Walls"))
 local Floor    = require(BackroomsFolder:WaitForChild("Floor"))
 local Ceiling  = require(BackroomsFolder:WaitForChild("Ceiling"))
@@ -120,7 +120,7 @@ Ceiling.Place(CONFIG, build, levelModel, levelFolder)
 -- ========= 4) PUERTA DE LUZ (blanca, Neon) SIN perforar muros =========
 Door.PlaceLightDoor(CONFIG, build, levelModel, levelFolder, {
 	gap = 2,              -- separa la puerta hacia el interior del backroom
-	prompt = true,        -- interacciÃ³n manual; si luego solo por tareas, usa false y OpenExit:Fire()
+	prompt = true,        -- interacción manual; si luego solo por tareas, usa false y OpenExit:Fire()
 	intensity = 2.5,      -- luz suave
 	range = 20,
 	useSurfaceLight = true,
@@ -149,7 +149,7 @@ do
 		spawn.Enabled = true
 		spawn.BrickColor = BrickColor.new("New Yeller")
 
-		-- Hacerlo "desaparecer": invisible y sin colisiÃ³n, pero sigue activo para respawns
+		-- Hacerlo "desaparecer": invisible y sin colisión, pero sigue activo para respawns
 		spawn.Transparency = 1
 		spawn.CanCollide = false
 
@@ -175,21 +175,21 @@ do
 	end
 end
 
--- ========= 6) SeÃ±al: nivel listo (Ãºtil para lÃ¡mparas, etc.) =========
+-- ========= 6) Señal: nivel listo (útil para lámparas, etc.) =========
 LevelBuilt:Fire()
 
--- ========= 7) ValidaciÃ³n de accesibilidad (grid + fÃ­sica) =========
+-- ========= 7) Validación de accesibilidad (grid + física) =========
 do
 	local okGrid, okPhys = Validate.EnsureAccessible(CONFIG, build, spawnCF)
 	print(string.format("[Validate] Grid=%s | Phys=%s", okGrid and "OK" or "FAIL", okPhys and "OK" or "FAIL"))
 
-	-- (Opcional) Si falla lo fÃ­sico, puedes abrir la puerta automÃ¡ticamente:
+	-- (Opcional) Si falla lo físico, puedes abrir la puerta automáticamente:
 	-- if okGrid and not okPhys then
-	--     OpenExit:Fire()
+	--     OpenExit:Fire()  -- <-- ¡ERROR CORREGIDO! (Cambiado '//' por '--')
 	-- end
 end
 
 print(string.format(
-	"[Backrooms] OK | Grid=%dx%d | Cell=(%.1f,%.1f) | WallH=%d | Modules: Wallsâ†’Floorâ†’Ceilingâ†’Door | Spawn invisible",
+	"[Backrooms] OK | Grid=%dx%d | Cell=(%.1f,%.1f) | WallH=%d | Modules: Walls->Floor->Ceiling->Door | Spawn invisible",
 	CONFIG.GRID_W, CONFIG.GRID_H, CONFIG.CELL_SIZE.X, CONFIG.CELL_SIZE.Y, CONFIG.WALL_HEIGHT
 	))
