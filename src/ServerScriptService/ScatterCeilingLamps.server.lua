@@ -1,5 +1,5 @@
 -- ServerScriptService/ScatterCeilingLamps.server.lua
--- Lámparas centradas en el techo, 0/90/180/270°, sin chocar muros ni salirse del techo.
+-- LÃ¡mparas centradas en el techo, 0/90/180/270Â°, sin chocar muros ni salirse del techo.
 -- Etiqueta todas las luces con "AllowLight". Singleton guard + carpeta propia.
 
 local RunService = game:GetService("RunService")
@@ -16,11 +16,11 @@ local LEVEL_FOLDER_NAME  = "Level0"
 local LEVEL_MODEL_NAME   = "Level0Model"
 local TARGET_CEILING_NAME = "Ceiling"
 
-local LAMP_COUNT = 50                       -- cuántas lámparas
-local LAMP_OFFSET_FROM_CEILING = 0.5       -- separación desde cara inferior del techo (studs)
-local LAMP_MIN_SPACING = 12                -- distancia mínima entre lámparas (centro a centro, XZ)
-local LAMP_WALL_CLEARANCE = 1.5            -- separación mínima respecto a muros
-local EDGE_MARGIN = 4                      -- margen mínimo con bordes del techo
+local LAMP_COUNT = 50                       -- cuÃ¡ntas lÃ¡mparas
+local LAMP_OFFSET_FROM_CEILING = 0.5       -- separaciÃ³n desde cara inferior del techo (studs)
+local LAMP_MIN_SPACING = 12                -- distancia mÃ­nima entre lÃ¡mparas (centro a centro, XZ)
+local LAMP_WALL_CLEARANCE = 1.5            -- separaciÃ³n mÃ­nima respecto a muros
+local EDGE_MARGIN = 4                      -- margen mÃ­nimo con bordes del techo
 local ROTATE_IN_90_STEPS = true            -- usar 0/90/180/270
 
 local TAG_ALLOW_LIGHTS = true              -- etiqueta todos los Light con "AllowLight"
@@ -36,7 +36,7 @@ if not flags then
 	flags.Parent = ReplicatedStorage
 end
 if flags:FindFirstChild("ScatterLampsRan") then
-	warn("[ScatterCeilingLamps] Ya corrió esta sesión; saliendo para evitar duplicados.")
+	warn("[ScatterCeilingLamps] Ya corriÃ³ esta sesiÃ³n; saliendo para evitar duplicados.")
 	return
 else
 	local marker = Instance.new("BoolValue")
@@ -45,7 +45,7 @@ else
 	marker.Parent = flags
 end
 
--- ============ Señal opcional: LevelBuilt ============
+-- ============ SeÃ±al opcional: LevelBuilt ============
 local function waitForLevelBuiltSignal(timeout)
 	local signals = ReplicatedStorage:FindFirstChild("BackroomsSignals")
 	if not signals then return false end
@@ -102,7 +102,7 @@ local function getWallsRectsXZ(root)
 	return rects
 end
 
--- Espera señal y/o techo
+-- Espera seÃ±al y/o techo
 waitForLevelBuiltSignal(WAIT_TIMEOUT_SECONDS * 0.5)
 local function waitForCeiling(timeout)
 	local t0 = os.clock()
@@ -116,7 +116,7 @@ end
 
 local ceiling = waitForCeiling(WAIT_TIMEOUT_SECONDS)
 if not ceiling then
-	warn(("[ScatterCeilingLamps] No se encontró el techo '%s'."):format(TARGET_CEILING_NAME))
+	warn(("[ScatterCeilingLamps] No se encontrÃ³ el techo '%s'."):format(TARGET_CEILING_NAME))
 	return
 end
 
@@ -132,7 +132,7 @@ else
 	lampTemplate = workspace:FindFirstChild(LAMP_TEMPLATE_NAME, true)
 end
 if not lampTemplate then
-	warn(("[ScatterCeilingLamps] No se encontró la plantilla '%s'."):format(LAMP_TEMPLATE_NAME))
+	warn(("[ScatterCeilingLamps] No se encontrÃ³ la plantilla '%s'."):format(LAMP_TEMPLATE_NAME))
 	return
 end
 
@@ -202,7 +202,7 @@ local function footprintHalfForYaw(yawStep)
 	return hx, hz
 end
 
--- ============ Área del techo ============
+-- ============ Ãrea del techo ============
 local size = ceiling.Size
 local halfX, halfZ = size.X * 0.5, size.Z * 0.5
 local ceilCF = ceiling.CFrame
@@ -238,7 +238,7 @@ while placed < LAMP_COUNT and tries > 0 do
 	-- validaciones
 	local ok = true
 
-	-- 1) separación entre lámparas
+	-- 1) separaciÃ³n entre lÃ¡mparas
 	if ok then
 		for _, r in ipairs(placedRects) do
 			if rectsOverlapXZ(lampRect, r, LAMP_MIN_SPACING * 0.5) then ok = false; break end
@@ -252,7 +252,7 @@ while placed < LAMP_COUNT and tries > 0 do
 		end
 	end
 
-	-- 3) dentro del área útil del techo (por seguridad extra)
+	-- 3) dentro del Ã¡rea Ãºtil del techo (por seguridad extra)
 	if ok then
 		if (x - hx) < (minX + EDGE_MARGIN) or (x + hx) > (maxX - EDGE_MARGIN)
 			or (z - hz) < (minZ + EDGE_MARGIN) or (z + hz) > (maxZ - EDGE_MARGIN) then
@@ -261,7 +261,7 @@ while placed < LAMP_COUNT and tries > 0 do
 	end
 
 	if ok then
-		-- ¡Colocar!
+		-- Â¡Colocar!
 		local lamp = cloneLamp()
 		local yaw = math.rad(90 * yawStep)
 		pivotTo(CFrame.new(worldPos) * CFrame.Angles(0, yaw, 0), lamp)
@@ -269,7 +269,7 @@ while placed < LAMP_COUNT and tries > 0 do
 		table.insert(placedRects, lampRect)
 		placed += 1
 	end
-	-- si no está ok, simplemente sigue al siguiente intento
+	-- si no estÃ¡ ok, simplemente sigue al siguiente intento
 end
 
-print(string.format("[ScatterCeilingLamps] Colocadas %d lámparas (solicitadas %d).", placed, LAMP_COUNT))
+print(string.format("[ScatterCeilingLamps] Colocadas %d lÃ¡mparas (solicitadas %d).", placed, LAMP_COUNT))

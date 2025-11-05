@@ -1,7 +1,7 @@
 --!strict
--- TimingController: orquesta un timeline de cues (mÃºsica, luces, eventos).
--- Permite play/pause/seek, loop y playback rate. Registras handlers por acciÃ³n.
--- Uso tÃ­pico: inyectar LightController y registrar handlers default.
+-- TimingController: orquesta un timeline de cues (música, luces, eventos).
+-- Permite play/pause/seek, loop y playback rate. Registras handlers por acción.
+-- Uso típico: inyectar LightController y registrar handlers default.
 
 local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
@@ -35,7 +35,7 @@ function TimingController.new(opts: Opts)
 	self._cursor = 1
 	self._conn = nil :: RBXScriptConnection?
 
-	-- MÃºsica base
+	-- Música base
 	self._sound = Instance.new("Sound")
 	self._sound.Name = "GameMusic"
 	self._sound.SoundId = (opts.MainMusic and opts.MainMusic ~= "inherit") and opts.MainMusic or ""
@@ -60,7 +60,7 @@ local function fire(self, actionName: string, params: any?)
 	self.CueFired:Fire(actionName, params)
 end
 
--- ===== Control de mÃºsica (handlers por defecto) =====
+-- ===== Control de música (handlers por defecto) =====
 function TimingController:_registerDefaultMusicHandlers()
 	self:OnAction("music:play", function(params)
 		local id = params and params.soundId or "inherit"
@@ -95,7 +95,7 @@ function TimingController:_registerDefaultMusicHandlers()
 	end)
 end
 
--- ===== ReproducciÃ³n del timeline =====
+-- ===== Reproducción del timeline =====
 function TimingController:Play()
 	if self._playing then return end
 	self._playing = true
@@ -150,7 +150,7 @@ function TimingController:_tick()
 		self._cursor += 1
 	end
 
-	-- loop si terminÃ³
+	-- loop si terminó
 	if self._cursor > #self._timeline then
 		if self._loop then
 			self:Seek(0)
@@ -177,7 +177,7 @@ function TimingController:Dispose()
 	self.CueFired:Destroy()
 end
 
--- Registrar handlers base de mÃºsica al crear
+-- Registrar handlers base de música al crear
 TimingController._registerDefaultMusicHandlers(TimingController)
 
 return TimingController

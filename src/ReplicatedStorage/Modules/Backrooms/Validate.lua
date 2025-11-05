@@ -1,5 +1,5 @@
 -- ReplicatedStorage/Modules/Backrooms/Validate.lua
--- Verifica accesibilidad: BFS en grid + Pathfinding físico hasta la puerta.
+-- Verifica accesibilidad: BFS en grid + Pathfinding fÃ­sico hasta la puerta.
 
 local PathfindingService = game:GetService("PathfindingService")
 
@@ -43,7 +43,7 @@ local function bfsPath(cfg, grid, sx, sz, gx, gz)
 		end
 		local c = grid[cur.x][cur.z]
 		for name,dir in pairs(DIRS) do
-			-- si NO hay muro en esa dirección, podemos pasar
+			-- si NO hay muro en esa direcciÃ³n, podemos pasar
 			if c.walls[name] == false then
 				local nx, nz = cur.x + dir.dx, cur.z + dir.dz
 				if inBounds(cfg, nx, nz) and not came[nx][nz] then
@@ -56,7 +56,7 @@ local function bfsPath(cfg, grid, sx, sz, gx, gz)
 	return nil
 end
 
--- punto frente a la puerta para pathfinding físico
+-- punto frente a la puerta para pathfinding fÃ­sico
 local function doorFrontWorld(cfg, build)
 	local cellX, cellZ = build.exitCell.X, build.exitCell.Z
 	local cx = cfg.ORIGIN.X + (cellX - 0.5) * cfg.CELL_SIZE.X
@@ -79,17 +79,17 @@ end
 
 -- Tras tu generador (Spawn ya creado), valida:
 function Validate.EnsureAccessible(cfg, build, spawnCFrame)
-	-- 1) BFS lógico (grid)
+	-- 1) BFS lÃ³gico (grid)
 	local okGrid = false
 	do
 		local path = bfsPath(cfg, build.grid, build.entranceCell.X, build.entranceCell.Z, build.exitCell.X, build.exitCell.Z)
 		okGrid = path ~= nil
 		if not okGrid then
-			warn("[Backrooms/Validate] BFS: NO hay camino lógico en el grid (esto no debería pasar con DFS).")
+			warn("[Backrooms/Validate] BFS: NO hay camino lÃ³gico en el grid (esto no deberÃ­a pasar con DFS).")
 		end
 	end
 
-	-- 2) PathfindingService físico
+	-- 2) PathfindingService fÃ­sico
 	local okPhys = false
 	do
 		local startPos = spawnCFrame and spawnCFrame.Position or Vector3.new(
@@ -106,7 +106,7 @@ function Validate.EnsureAccessible(cfg, build, spawnCFrame)
 		if pf.Status == Enum.PathStatus.Success then
 			okPhys = true
 		else
-			warn("[Backrooms/Validate] Pathfinding físico: sin camino al frente de la puerta. Estado:", pf.Status)
+			warn("[Backrooms/Validate] Pathfinding fÃ­sico: sin camino al frente de la puerta. Estado:", pf.Status)
 		end
 	end
 

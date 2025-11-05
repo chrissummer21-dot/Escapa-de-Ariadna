@@ -1,6 +1,6 @@
 -- TODO: paste code here
 -- ReplicatedStorage/Modules/Backrooms/Door.lua
--- Puerta tipo “luz blanca” Neon + luz suave adicional.
+-- Puerta tipo â€œluz blancaâ€ Neon + luz suave adicional.
 -- Coloca la puerta ligeramente hacia el interior (gap) sin perforar muros.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -61,7 +61,7 @@ function Door.PlaceLightDoor(cfg, build, levelModel, levelFolder, options)
 	door.CanCollide = true
 	door.Material = Enum.Material.Neon
 	door.Color = neonColor             -- Neon blanco
-	door.Transparency = 0.2            -- un poco más suave que 0.1
+	door.Transparency = 0.2            -- un poco mÃ¡s suave que 0.1
 	door.CastShadow = false
 
 	local edge = build.exitEdge or "S"
@@ -91,7 +91,7 @@ function Door.PlaceLightDoor(cfg, build, levelModel, levelFolder, options)
 		sl.Brightness = intensity
 		sl.Range = range
 		sl.Color = Color3.fromRGB(255,255,255)
-		-- orienta hacia el interior del pasillo según el borde
+		-- orienta hacia el interior del pasillo segÃºn el borde
 		if edge == "N" then sl.Face = Enum.NormalId.Back      -- emite hacia +Z
 		elseif edge == "S" then sl.Face = Enum.NormalId.Front -- emite hacia -Z
 		elseif edge == "W" then sl.Face = Enum.NormalId.Right -- emite hacia +X
@@ -106,7 +106,7 @@ function Door.PlaceLightDoor(cfg, build, levelModel, levelFolder, options)
 		pl.Parent = door
 	end
 
-	-- Abrir (desvanecer y quitar colisión)
+	-- Abrir (desvanecer y quitar colisiÃ³n)
 	local opening = false
 	local function open()
 		if opening then return end
@@ -117,7 +117,7 @@ function Door.PlaceLightDoor(cfg, build, levelModel, levelFolder, options)
 		t1:Play(); t1.Completed:Wait(); t2:Play()
 	end
 
-	-- Interacción manual (si no se fuerza solo por señal)
+	-- InteracciÃ³n manual (si no se fuerza solo por seÃ±al)
 	if usePrompt then
 		local prompt = Instance.new("ProximityPrompt")
 		prompt.ActionText = "Entrar"
@@ -128,7 +128,7 @@ function Door.PlaceLightDoor(cfg, build, levelModel, levelFolder, options)
 		prompt.Triggered:Connect(open)
 	end
 
-	-- Señal para abrir por tareas
+	-- SeÃ±al para abrir por tareas
 	local _, OpenExit = getSignals()
 	OpenExit.Event:Connect(open)
 
