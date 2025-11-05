@@ -1,4 +1,4 @@
-﻿-- TODO: paste code here
+-- TODO: paste code here
 local Util = require(game.ReplicatedStorage.Modules.Backrooms.Util)
 local Floor = {}
 

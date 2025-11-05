@@ -1,4 +1,4 @@
-﻿-- ServerScriptService/ScatterCeilingLamps.server.lua
+-- ServerScriptService/ScatterCeilingLamps.server.lua
 -- Lámparas centradas en el techo, 0/90/180/270°, sin chocar muros ni salirse del techo.
 -- Etiqueta todas las luces con "AllowLight". Singleton guard + carpeta propia.
 

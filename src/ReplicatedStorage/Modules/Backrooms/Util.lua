@@ -1,4 +1,4 @@
-﻿local Util = {}
+local Util = {}
 
 function Util.ParentTarget(levelModel, levelFolder)
 	return levelModel or levelFolder

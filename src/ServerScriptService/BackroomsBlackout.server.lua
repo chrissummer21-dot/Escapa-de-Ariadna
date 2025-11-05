@@ -1,4 +1,4 @@
-﻿-- ServerScriptService/BackroomsBlackout.server.lua
+-- ServerScriptService/BackroomsBlackout.server.lua
 -- Apaga toda la iluminación global y bloquea luces nuevas,
 -- excepto las que estén dentro de "GlitchLightDoor" o con tag "AllowLight".
 

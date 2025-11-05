@@ -1,4 +1,4 @@
-﻿-- ServerScriptService/NightLock.server.lua
+-- ServerScriptService/NightLock.server.lua
 -- Mantiene el mundo siempre de noche (hora fija).
 
 local RunService = game:GetService("RunService")

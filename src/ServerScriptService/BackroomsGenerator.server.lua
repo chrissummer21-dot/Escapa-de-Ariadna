@@ -1,4 +1,4 @@
-﻿-- ServerScriptService/BackroomsGenerator.server.lua
+-- ServerScriptService/BackroomsGenerator.server.lua
 -- Orquestador modular del Backrooms:
 -- 1) Walls -> 2) Floor -> 3) Ceiling -> 4) Door
 -- + Spawn interno que luego "desaparece"

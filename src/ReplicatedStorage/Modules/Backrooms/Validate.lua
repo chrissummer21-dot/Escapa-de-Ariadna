@@ -1,4 +1,4 @@
-﻿-- ReplicatedStorage/Modules/Backrooms/Validate.lua
+-- ReplicatedStorage/Modules/Backrooms/Validate.lua
 -- Verifica accesibilidad: BFS en grid + Pathfinding físico hasta la puerta.
 
 local PathfindingService = game:GetService("PathfindingService")

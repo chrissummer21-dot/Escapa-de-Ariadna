@@ -1,7 +1,7 @@
 --!strict
--- TimingController: orquesta un timeline de cues (música, luces, eventos).
--- Permite play/pause/seek, loop y playback rate. Registras handlers por acción.
--- Uso típico: inyectar LightController y registrar handlers default.
+-- TimingController: orquesta un timeline de cues (mÃºsica, luces, eventos).
+-- Permite play/pause/seek, loop y playback rate. Registras handlers por acciÃ³n.
+-- Uso tÃ­pico: inyectar LightController y registrar handlers default.
 
 local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
@@ -13,7 +13,7 @@ local TimingController = {}
 TimingController.__index = TimingController
 
 type Opts = {
-	Timeline: { Cue },
+	Timeline: {Cue},
 	LoopTimeline: boolean?,
 	PlaybackRate: number?,
 	DefaultMusicVolume: number?,
@@ -23,7 +23,7 @@ type Opts = {
 function TimingController.new(opts: Opts)
 	local self = setmetatable({}, TimingController)
 
-	self._timeline = table.clone(opts.Timeline or {}) :: { Cue }
+	self._timeline = table.clone(opts.Timeline or {}) :: {Cue}
 	table.sort(self._timeline, function(a, b) return a.t < b.t end)
 
 	self._loop = opts.LoopTimeline == true
@@ -35,7 +35,7 @@ function TimingController.new(opts: Opts)
 	self._cursor = 1
 	self._conn = nil :: RBXScriptConnection?
 
-	-- Música base
+	-- MÃºsica base
 	self._sound = Instance.new("Sound")
 	self._sound.Name = "GameMusic"
 	self._sound.SoundId = (opts.MainMusic and opts.MainMusic ~= "inherit") and opts.MainMusic or ""
@@ -60,7 +60,7 @@ local function fire(self, actionName: string, params: any?)
 	self.CueFired:Fire(actionName, params)
 end
 
--- ===== Control de música (handlers por defecto) =====
+-- ===== Control de mÃºsica (handlers por defecto) =====
 function TimingController:_registerDefaultMusicHandlers()
 	self:OnAction("music:play", function(params)
 		local id = params and params.soundId or "inherit"
@@ -95,7 +95,7 @@ function TimingController:_registerDefaultMusicHandlers()
 	end)
 end
 
--- ===== Reproducción del timeline =====
+-- ===== ReproducciÃ³n del timeline =====
 function TimingController:Play()
 	if self._playing then return end
 	self._playing = true
@@ -150,7 +150,7 @@ function TimingController:_tick()
 		self._cursor += 1
 	end
 
-	-- loop si terminó
+	-- loop si terminÃ³
 	if self._cursor > #self._timeline then
 		if self._loop then
 			self:Seek(0)
@@ -177,7 +177,7 @@ function TimingController:Dispose()
 	self.CueFired:Destroy()
 end
 
--- Registrar handlers base de música al crear
+-- Registrar handlers base de mÃºsica al crear
 TimingController._registerDefaultMusicHandlers(TimingController)
 
 return TimingController

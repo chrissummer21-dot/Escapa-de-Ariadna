@@ -1,4 +1,4 @@
-﻿local Util = require(game.ReplicatedStorage.Modules.Backrooms.Util)
+local Util = require(game.ReplicatedStorage.Modules.Backrooms.Util)
 local Ceiling = {}
 
 function Ceiling.Place(cfg, build, levelModel, levelFolder)

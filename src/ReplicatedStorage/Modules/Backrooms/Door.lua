@@ -1,4 +1,4 @@
-﻿-- TODO: paste code here
+-- TODO: paste code here
 -- ReplicatedStorage/Modules/Backrooms/Door.lua
 -- Puerta tipo “luz blanca” Neon + luz suave adicional.
 -- Coloca la puerta ligeramente hacia el interior (gap) sin perforar muros.

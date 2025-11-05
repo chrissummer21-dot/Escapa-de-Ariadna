@@ -1,7 +1,7 @@
-﻿-- TODO: paste code here
+-- TODO: paste code here
 -- ReplicatedStorage/Modules/Backrooms/Walls.lua
 -- Maze conectado (DFS), SIN abrir huecos en el borde.
--- Construcción de muros SIN duplicados por arista (consistencia y sin solapes raros).
+-- ConstrucciÃ³n de muros SIN duplicados por arista (consistencia y sin solapes raros).
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Util = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Backrooms"):WaitForChild("Util"))
@@ -27,7 +27,7 @@ local function shuffle(rng, list)
 	end
 end
 
--- DFS: genera un árbol que conecta TODAS las celdas (sin islas)
+-- DFS: genera un Ã¡rbol que conecta TODAS las celdas (sin islas)
 local function carve(cfg, rng, grid, x, z)
 	local cell = grid[x][z]
 	cell.visited = true
@@ -44,7 +44,7 @@ local function carve(cfg, rng, grid, x, z)
 	end
 end
 
--- Fábrica de muro
+-- FÃ¡brica de muro
 local function makeWall(parent, pos, size)
 	local p = Instance.new("Part")
 	p.Anchored = true
@@ -72,7 +72,7 @@ function Walls.Generate(cfg, rng, levelModel, levelFolder)
 	-- 2) DFS: conecta todo
 	carve(cfg, rng, grid, rng:NextInteger(1,cfg.GRID_W), rng:NextInteger(1,cfg.GRID_H))
 
-	-- 3) Opcional: añadir bucles extra (no rompe conectividad)
+	-- 3) Opcional: aÃ±adir bucles extra (no rompe conectividad)
 	for i=1, cfg.EXTRA_LOOPS do
 		local x = rng:NextInteger(1, cfg.GRID_W)
 		local z = rng:NextInteger(1, cfg.GRID_H)
@@ -85,9 +85,9 @@ function Walls.Generate(cfg, rng, levelModel, levelFolder)
 		end
 	end
 
-	-- 4) Construcción SIN duplicados por arista:
+	-- 4) ConstrucciÃ³n SIN duplicados por arista:
 	--    - Solo construimos muros hacia SUR y ESTE por cada celda.
-	--    - Además, construimos el borde NORTE del z=1 y el borde OESTE del x=1.
+	--    - AdemÃ¡s, construimos el borde NORTE del z=1 y el borde OESTE del x=1.
 	--    - Posicionamos muros al borde interior con t*0.5 para cerrar con piso/techo.
 	local parent = Util.ParentTarget(levelModel, levelFolder)
 	local t      = cfg.WALL_THICK
@@ -119,7 +119,7 @@ function Walls.Generate(cfg, rng, levelModel, levelFolder)
 		end
 	end
 
-	-- 5) Sin huecos exteriores: definimos entrada/salida lógicas solo para orientar puerta
+	-- 5) Sin huecos exteriores: definimos entrada/salida lÃ³gicas solo para orientar puerta
 	local entranceEdge = "N"
 	local exitEdge     = "S"
 	local sx, sz = 1, 1
