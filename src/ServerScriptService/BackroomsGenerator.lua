@@ -15,26 +15,12 @@ local Ceiling = require(BackroomsFolder:WaitForChild("Ceiling"))
 local Door = require(BackroomsFolder:WaitForChild("Door"))
 local Util = require(BackroomsFolder:WaitForChild("Util"))
 local Validate = require(BackroomsFolder:WaitForChild("Validate"))
-
--- ========= Señales =========
-local Signals = ReplicatedStorage:FindFirstChild("BackroomsSignals")
-if not Signals then
-	Signals = Instance.new("Folder")
-	Signals.Name = "BackroomsSignals"
-	Signals.Parent = ReplicatedStorage
-end
-local OpenExit = Signals:FindFirstChild("OpenExit")
-if not OpenExit then
-	OpenExit = Instance.new("BindableEvent")
-	OpenExit.Name = "OpenExit"
-	OpenExit.Parent = Signals
-end
-local LevelBuilt = Signals:FindFirstChild("LevelBuilt")
-if not LevelBuilt then
-	LevelBuilt = Instance.new("BindableEvent")
-	LevelBuilt.Name = "LevelBuilt"
-	LevelBuilt.Parent = Signals
-end
+local BackroomsBlackout = require(script.Parent:WaitForChild("BackroomsBlackout"))
+-- ========= Señales (SOLO OBTENERLAS) =========
+-- (Elimina la creación de señales de aquí, GameManager ya lo hace)
+local Signals = ReplicatedStorage:WaitForChild("BackroomsSignals")
+local OpenExit = Signals:WaitForChild("OpenExit")
+local LevelBuilt = Signals:WaitForChild("LevelBuilt") -- Es un RemoteEvent
 
 -- Crear el Módulo
 local BackroomsGenerator = {}
@@ -151,7 +137,7 @@ function BackroomsGenerator.Generate(playerCount)
 	end
 	
 	-- ========= 6) Señal: nivel listo =========
-	LevelBuilt:Fire()
+	
 	
 	-- ========= 7) Validación =========
 	do
@@ -169,6 +155,24 @@ function BackroomsGenerator.Generate(playerCount)
 	-- Llama al spawner de llaves
 	local keyCount = (CONFIG.KEYS_REQUIRED or 3) + (CONFIG.EXTRA_KEYS or 0)
 	require(script.Parent:WaitForChild("ScatterKeys")).Run(keyCount)
+
+    -- ¡NUEVO! Llamamos a los scripts convertidos
+	-- (Estos deben ser renombrados a .lua y ser ModuleScripts)
+	print("[Backrooms] Generando Luces, Aura e IA...")
+	require(script.Parent:WaitForChild("ScatterCeilingLamps")).Run(levelFolder)
+	require(script.Parent:WaitForChild("KeyAura")).Start()
+	require(script.Parent:WaitForChild("MonsterAI")).Start(levelFolder)
+
+    print("[Backrooms] Aplicando Blackout...")
+BackroomsBlackout.Apply()
+
+	-- ¡NUEVO! Disparar la señal a los clientes DESPUÉS de que todo esté listo
+	LevelBuilt:FireAllClients(levelFolder)
+	
+	print(string.format(
+		"[Backrooms] OK | Grid=%dx%d | AI y Luces iniciados. Señal 'LevelBuilt' enviada.",
+		CONFIG.GRID_W, CONFIG.GRID_H
+	))
 	
 	-- Devolver datos útiles al GameManager
 	return {

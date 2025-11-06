@@ -1,9 +1,15 @@
--- ServerScriptService/VFX/KeyAura.server.lua
+-- src/ServerScriptService/KeyAura.lua
+-- CONVERTIDO A MODULESCRIPT
 -- Da un halo blanco/plateado + luz + partículas a las llaves del mapa.
+-- Es llamado por BackroomsGenerator.
 
 local CollectionService = game:GetService("CollectionService")
 local RunService = game:GetService("RunService")
 
+-- 1. Crear la tabla del módulo
+local KeyAura = {}
+
+-- 2. Pegar toda la configuración y funciones auxiliares
 local TAG_NAME = "Key" -- Tag para tus llaves
 
 local CFG = {
@@ -54,7 +60,7 @@ local function ensurePrimaryPart(model: Model): BasePart?
 	end
 	-- heuristic: Handle, o la primera BasePart
 	local handle = model:FindFirstChild("Handle", true)
-	if handle and handle:IsA("BasePart") then
+	if handle and handle:IsA("BaseBapart") then
 		model.PrimaryPart = handle
 		return handle
 	end
@@ -157,22 +163,30 @@ local function scanWorkspace()
 	end
 end
 
--- Reacciona a nuevos con tag
-CollectionService:GetInstanceAddedSignal(TAG_NAME):Connect(function(inst)
-	if inst:IsA("Model") then
-		applyVFX(inst)
-	end
-end)
+-- 3. Crear la función Start() que será llamada por el Generador
+function KeyAura.Start()
+	print("[KeyAura] Módulo iniciado. Activando listeners y escaneando llaves.")
+	
+	-- Reacciona a nuevos con tag
+	CollectionService:GetInstanceAddedSignal(TAG_NAME):Connect(function(inst)
+		if inst:IsA("Model") then
+			applyVFX(inst)
+		end
+	end)
 
--- Si alguien quita el tag y quieres remover VFX, podrías escuchar GetInstanceRemovedSignal.
--- Aquí lo dejamos permanente mientras exista el Model.
+	-- Escucha nuevos modelos que parezcan llaves por atributo/nombre
+	workspace.DescendantAdded:Connect(function(inst)
+		if inst:IsA("Model") and isKeyModel(inst) then
+			applyVFX(inst)
+		end
+	end)
 
--- Escucha nuevos modelos que parezcan llaves por atributo/nombre
-workspace.DescendantAdded:Connect(function(inst)
-	if inst:IsA("Model") and isKeyModel(inst) then
-		applyVFX(inst)
-	end
-end)
+	-- Arranque
+	-- Espera un frame para asegurar que ScatterKeys haya terminado
+	task.wait() 
+	scanWorkspace()
+end
 
--- Arranque
-scanWorkspace()
+
+-- 4. Devolver el módulo
+return KeyAura

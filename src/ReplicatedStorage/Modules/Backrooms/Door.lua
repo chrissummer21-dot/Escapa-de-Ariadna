@@ -1,43 +1,51 @@
--- ReplicatedStorage/Modules/Backrooms/Door.lua
--- MODIFICADO: Usa un RemoteEvent para enviar un "toast" al cliente
--- en lugar de cambiar el ObjectText.
+-- src/ReplicatedStorage/Modules/Backrooms/Door.lua
+-- MODIFICADO (V4):
+-- 1. La luz/puerta se queda encendida (no desaparece).
+-- 2. Dispara la señal "DoorOpenedSignal" 1 sola vez.
+-- 3. Respawnea en el lobby a CUALQUIERA que la use después de abierta.
+-- 4. Pone una bandera "WonGame" en el jugador para que GameManager lo sepa.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local Door = {}
 
--- (NUEVO) Modificamos getSignals para que también maneje el RemoteEvent
+-- getSignals (Solo busca, ya no crea)
 local function getSignals()
-	local signals = ReplicatedStorage:FindFirstChild("BackroomsSignals")
-	if not signals then
-		signals = Instance.new("Folder")
-		signals.Name = "BackroomsSignals"
-		signals.Parent = ReplicatedStorage
-	end
+	local signals = ReplicatedStorage:WaitForChild("BackroomsSignals")
+	local openExit = signals:WaitForChild("OpenExit")
+	local showToast = signals:WaitForChild("ShowToastMessage")
+	local doorOpened = signals:WaitForChild("DoorOpenedSignal") -- ¡NUEVO!
 	
-	local openExit = signals:FindFirstChild("OpenExit")
-	if not openExit then
-		openExit = Instance.new("BindableEvent")
-		openExit.Name = "OpenExit"
-		openExit.Parent = signals
-	end
-	
-	-- (NUEVO) Añadir el RemoteEvent para los mensajes toast
-	local showToast = signals:FindFirstChild("ShowToastMessage")
-	if not showToast then
-		showToast = Instance.new("RemoteEvent")
-		showToast.Name = "ShowToastMessage"
-		showToast.Parent = signals
-	end
-	
-	return signals, openExit, showToast
+	return signals, openExit, showToast, doorOpened
 end
+
+-- ¡NUEVA FUNCIÓN! Esta es la lógica de respawn
+local function respawnPlayerToLobby(player)
+	if not player then return end
+	
+	-- 1. Poner la bandera para que GameManager la vea
+	local flag = Instance.new("BoolValue")
+	flag.Name = "WonGame"
+	flag.Parent = player
+	
+	-- 2. Encontrar el spawn del lobby
+	local lobbySpawn = workspace:FindFirstChild("LobbySpawn")
+	
+	if lobbySpawn then
+		print(string.format("[Door] %s ha usado la puerta. Respawneando en el lobby.", player.Name))
+		player.RespawnLocation = lobbySpawn
+		player:LoadCharacter()
+	else
+		warn("[Door] ¡No se pudo encontrar 'LobbySpawn' en workspace para el respawn!")
+	end
+end
+
 
 function Door.PlaceLightDoor(cfg, build, levelModel, levelFolder, options)
 	options = options or {}
 	local gap         = options.gap or 2
-	local usePrompt   = (options.prompt ~= false) and (options.openBySignalOnly ~= true)
+	local usePrompt   = (options.prompt ~= false)
 	local intensity   = options.intensity or 2.5
 	local range       = options.range or 20
 	local useSurface  = (options.useSurfaceLight ~= false)
@@ -66,6 +74,7 @@ function Door.PlaceLightDoor(cfg, build, levelModel, levelFolder, options)
 	door.Color = neonColor
 	door.Transparency = 0.2
 	door.CastShadow = false
+	door:SetAttribute("IsOpen", false) -- ¡NUEVO! Atributo para estado
 
 	local edge = build.exitEdge or "S"
 	local dH = cfg.DOOR_HEIGHT or 12
@@ -108,14 +117,12 @@ function Door.PlaceLightDoor(cfg, build, levelModel, levelFolder, options)
 		pl.Parent = door
 	end
 
-	local opening = false
-	local function open()
-		if opening then return end
-		opening = true
+	-- Función de animación (solo se llama una vez)
+	local function animateDoorOpen()
 		door.CanCollide = false
-		local t1 = TweenService:Create(door, TweenInfo.new(0.25, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Transparency = 0.6})
-		local t2 = TweenService:Create(door, TweenInfo.new(0.35, Enum.EasingStyle.Sine), {Transparency = 1})
-		t1:Play(); t1.Completed:Wait(); t2:Play()
+		local t1 = TweenService:Create(door, TweenInfo.new(0.4, Enum.EasingStyle.Sine), {Transparency = 0.6})
+		t1:Play()
+		-- ¡YA NO SE DESTRUYE NI SE HACE 100% TRANSPARENTE!
 	end
 
 	local keysInserted = Instance.new("IntValue")
@@ -123,8 +130,7 @@ function Door.PlaceLightDoor(cfg, build, levelModel, levelFolder, options)
 	keysInserted.Value = 0
 	keysInserted.Parent = door
 
-	-- (MODIFICADO) Obtener el nuevo RemoteEvent
-	local _, OpenExit, ShowToastMessage = getSignals()
+	local _, OpenExit, ShowToastMessage, DoorOpenedSignal = getSignals()
 
 	if usePrompt then
 		local prompt = Instance.new("ProximityPrompt")
@@ -138,14 +144,22 @@ function Door.PlaceLightDoor(cfg, build, levelModel, levelFolder, options)
 			if newValue < keysRequired then
 				prompt.ObjectText = string.format("Abrir (%d/%d)", newValue, keysRequired)
 			else
-				prompt.ObjectText = "Abierto"
-				prompt.Enabled = false
+				prompt.ObjectText = "Salir al Lobby" -- ¡Texto cambiado!
+				prompt.Enabled = true
 			end
 		end)
 
+		-- ==== ¡LÓGICA DE PROMPT MODIFICADA! ====
 		prompt.Triggered:Connect(function(player)
-			if opening or keysInserted.Value >= keysRequired then return end
+			
+			-- Chequear si la puerta ya está abierta
+			if door:GetAttribute("IsOpen") == true then
+				print("[Door] La puerta ya estaba abierta. Respawneando jugador.")
+				respawnPlayerToLobby(player)
+				return
+			end
 
+			-- Si no está abierta, chequear llaves
 			local keyTool = player.Backpack:FindFirstChild(keyName)
 			if not keyTool then
 				keyTool = player.Character:FindFirstChild(keyName)
@@ -154,12 +168,32 @@ function Door.PlaceLightDoor(cfg, build, levelModel, levelFolder, options)
 			if keyTool then
 				keyTool:Destroy()
 				keysInserted.Value = keysInserted.Value + 1
-				if keysInserted.Value >= keysRequired then
-					open()
+				
+				local remaining = keysRequired - keysInserted.Value
+				
+				if remaining > 0 then
+					local message = ""
+					if remaining > 1 then
+						message = string.format("Faltan %d llaves", remaining)
+					else
+						message = "Falta 1 llave"
+					end
+					ShowToastMessage:FireClient(player, message)
+				
+				elseif remaining == 0 then
+					-- ¡ÚLTIMA LLAVE!
+					print("[Door] ¡Última llave insertada!")
+					ShowToastMessage:FireClient(player, "¡Puerta desbloqueada!")
+					
+					door:SetAttribute("IsOpen", true)
+					DoorOpenedSignal:FireAllClients() -- ¡Avisar a todos!
+					
+					animateDoorOpen()
+					respawnPlayerToLobby(player) -- Respawnear al primer jugador
 				end
+				
 			else
-				-- (INICIO DE MODIFICACIÓN)
-				-- 4. No tiene llave: Disparar el RemoteEvent al cliente
+				-- El jugador no tiene llave
 				local remaining = keysRequired - keysInserted.Value
 				local message = ""
 				if remaining > 1 then
@@ -167,15 +201,21 @@ function Door.PlaceLightDoor(cfg, build, levelModel, levelFolder, options)
 				else
 					message = "Necesitas 1 llave más"
 				end
-				
-				-- Dispara el evento SOLO a ese jugador
 				ShowToastMessage:FireClient(player, message)
-				-- (FIN DE MODIFICACIÓN)
 			end
 		end)
 	end
 
-	OpenExit.Event:Connect(open)
+	-- (Si la puerta se abre por señal (ej. admin))
+	OpenExit.Event:Connect(function()
+		if door:GetAttribute("IsOpen") == true then return end
+		
+		print("[Door] Abierta forzosamente por señal.")
+		door:SetAttribute("IsOpen", true)
+		keysInserted.Value = keysRequired
+		DoorOpenedSignal:FireAllClients()
+		animateDoorOpen()
+	end)
 
 	return door
 end

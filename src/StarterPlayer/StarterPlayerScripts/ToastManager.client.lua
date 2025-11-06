@@ -1,6 +1,7 @@
 -- src/StarterPlayer/StarterPlayerScripts/ToastManager.client.lua
--- Este script ahora maneja la creación de un "toast"
--- que se activa por un RemoteEvent desde el servidor.
+-- MODIFICADO (V15): Ahora maneja múltiples toasts
+-- cancelando el anterior para mostrar el nuevo.
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
@@ -16,7 +17,7 @@ local showToastEvent = signalsFolder:WaitForChild("ShowToastMessage")
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "ToastGui"
 screenGui.ResetOnSpawn = false
-screenGui.DisplayOrder = 99 -- Asegura que esté encima de otras UI
+screenGui.DisplayOrder = 99 -- Encima de DoorStatus
 
 local textLabel = Instance.new("TextLabel")
 textLabel.Name = "ToastLabel"
@@ -31,11 +32,11 @@ textLabel.BackgroundTransparency = 0.2
 textLabel.BorderMode = Enum.BorderMode.Outline
 textLabel.BorderSizePixel = 1
 
--- (IMPORTANTE) Posición y Tamaño usando 'Scale' para adaptarse a cualquier resolución
--- ==== CORRECCIÓN 1: Comentario en una sola línea ====
-textLabel.AnchorPoint = Vector2.new(0.5, 1) -- Anclado abajo y al centro
-textLabel.Size = UDim2.new(0.4, 0, 0.08, 0) -- 40% ancho, 8% alto
-textLabel.Position = UDim2.new(0.5, 0, 0.9, 0) -- 50% centro X, 90% abajo Y
+-- ==== POSICIÓN Y TAMAÑO (PARTE SUPERIOR) ====
+textLabel.AnchorPoint = Vector2.new(0.5, 0) -- Anclaje: Centro (X), Arriba (Y)
+textLabel.Size = UDim2.new(0.5, 0, 0.08, 0) -- Tamaño: 50% ancho, 8% alto
+textLabel.Position = UDim2.new(0.5, 0, 0.25, 0) -- Posición: 50% (Centro X), 25% (Debajo de DoorStatus)
+-- ===========================================
 
 -- Inicialmente invisible
 textLabel.TextTransparency = 1
@@ -63,25 +64,46 @@ local goalsOut = {
 local tweenIn = TweenService:Create(textLabel, tweenInfoIn, goalsIn)
 local tweenOut = TweenService:Create(textLabel, tweenInfoOut, goalsOut)
 
-local isShowing = false -- Debounce para evitar spamear
+-- ==== ¡NUEVA LÓGICA DE EVENTOS (V15)! ====
+local currentToastJob = nil -- Variable para guardar el toast activo
 
 -- 4. Conectar el evento
 showToastEvent.OnClientEvent:Connect(function(message)
-	-- ==== CORRECCIÓN 2: 'if' en una sola línea ====
-	if isShowing then return end -- Evitar que se pise
 	
-	isShowing = true
-	textLabel.Text = message
-	
-	tweenIn:Play()
-	tweenIn.Completed:Wait() -- Esperar a que termine de aparecer
-	
-	task.wait(STAY_TIME)
-	
-	tweenOut:Play()
-	tweenOut.Completed:Wait() -- Esperar a que termine de desaparecer
-	
-	isShowing = false
+	-- Si hay un toast activo (mostrándose o esperando),
+	-- cancélelo inmediatamente.
+	if currentToastJob then
+		task.cancel(currentToastJob)
+		currentToastJob = nil
+	end
+
+	-- Iniciar un nuevo "trabajo" (coroutine) para este toast
+	currentToastJob = task.spawn(function()
+		
+		textLabel.Text = message
+		
+		-- Detener animaciones anteriores y forzar estado visible (si estaba desapareciendo)
+		tweenIn:Cancel()
+		tweenOut:Cancel()
+		textLabel.TextTransparency = 0
+		textLabel.BackgroundTransparency = 0.2
+		
+		-- (Si no estaba visible, hacer el fade in)
+		if textLabel.TextTransparency > 0 then
+			tweenIn:Play()
+			tweenIn.Completed:Wait()
+		end
+		
+		-- Esperar
+		task.wait(STAY_TIME)
+		
+		-- Ocultar
+		tweenOut:Play()
+		tweenOut.Completed:Wait()
+		
+		-- Limpiar
+		currentToastJob = nil
+	end)
 end)
 
-print("ToastManager.client.lua cargado.")
+print("ToastManager.client.lua (V15 - Cola corregida) cargado.")

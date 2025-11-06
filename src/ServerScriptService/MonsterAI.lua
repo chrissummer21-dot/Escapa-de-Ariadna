@@ -1,7 +1,7 @@
--- src/ServerScriptService/MonsterAI.server.lua
+-- src/ServerScriptService/MonsterAI.lua
+-- CONVERTIDO A MODULESCRIPT
+-- Es llamado por BackroomsGenerator cuando el nivel está listo.
 -- IA para "La Niña" que caza al jugador en la oscuridad y huye de la luz.
--- Implementación con SimplePath para persecución fluida (sin “pasitos”).
--- Requiere: ModuleScript "SimplePath" en ReplicatedStorage/SimplePath
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -10,6 +10,9 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 local SimplePath = require(ReplicatedStorage:WaitForChild("SimplePath"))
+
+-- Crear el módulo
+local MonsterAI = {}
 
 -- ==================== CONFIGURACIÓN DE IA ====================
 local CONFIG = {
@@ -23,14 +26,14 @@ local CONFIG = {
 	FADE_OUT_DURATION = 1.0,
 
 	-- 3) Combate y Movimiento
-	CHASE_SPEED = 40,
+	CHASE_SPEED = 5,
 	FLEE_SPEED = 25,
 	DAMAGE_AMOUNT = 25,
 	ATTACK_COOLDOWN = 2,
 
 	-- 4) Spawn
-	MIN_SPAWN_FROM_PLAYER = 30,
-	MAX_SPAWN_FROM_PLAYER = 80,
+	MIN_SPAWN_FROM_PLAYER = 50,
+	MAX_SPAWN_FROM_PLAYER = 100,
 
 	-- 5) Detección de Luz
 	FLASHLIGHT_RANGE = 60,
@@ -54,35 +57,37 @@ local CONFIG = {
 -- ==========================================================
 
 local MONSTER_TEMPLATE = ReplicatedStorage:FindFirstChild(CONFIG.MONSTER_TEMPLATE_NAME)
-if not MONSTER_TEMPLATE then
-	warn(string.format("[MonsterAI] ¡ERROR! No se encontró '%s' en ReplicatedStorage.", CONFIG.MONSTER_TEMPLATE_NAME))
-	return
-end
 
+-- Variables de estado del módulo
 local monster: Model? = nil
 local aiState = "Idle" -- "Idle", "Chasing", "Fleeing"
 local targetPlayer: Player? = nil
 local lastAttackTime = 0
 
-local levelFolder = workspace:WaitForChild("Level0")
-local floorPart: BasePart? = nil
-local ceilingLampsFolder: Instance? = nil
+-- Variables de entorno (se asignan en Start)
+local moduleLevelFolder = nil
+local moduleFloorPart: BasePart? = nil
+local moduleCeilingLampsFolder: Instance? = nil
 
 local lightRaycastParams = RaycastParams.new()
 lightRaycastParams.FilterType = Enum.RaycastFilterType.Exclude
 lightRaycastParams.FilterDescendantsInstances = {}
 
--- ---------- UTILIDADES ----------
+-- ---------- UTILIDADES (MODIFICADAS) ----------
 local function findFloor(): BasePart?
-	if floorPart then return floorPart end
-	local model = levelFolder:FindFirstChild("Level0Model")
+	if moduleFloorPart then return moduleFloorPart end
+	if not moduleLevelFolder then return nil end -- Guard
+	
+	local model = moduleLevelFolder:FindFirstChild("Level0Model")
 	local floorName = "Floor"
 	if model then
 		local p = model:FindFirstChild(floorName)
-		if p and p:IsA("BasePart") then floorPart = p; return p end
+		if p and p:IsA("BasePart") then moduleFloorPart = p; return p end
 	end
-	local p2 = levelFolder:FindFirstChild(floorName)
-	if p2 and p2:IsA("BasePart") then floorPart = p2; return p2 end
+	
+	local p2 = moduleLevelFolder:FindFirstChild(floorName)
+	if p2 and p2:IsA("BasePart") then moduleFloorPart = p2; return p2 end
+	
 	warn("[MonsterAI] No se encontró 'Floor' en Level0.")
 	return nil
 end
@@ -119,13 +124,15 @@ local function hasLineOfSight(fromPos: Vector3, toPos: Vector3): boolean
 	return (not ray) or (ray.Instance and monster and ray.Instance:IsDescendantOf(monster))
 end
 
--- ---------- LUZ ----------
+-- ---------- LUZ (MODIFICADA) ----------
 local function isPositionLitByCeiling(pos: Vector3): boolean
-	if not ceilingLampsFolder then
-		ceilingLampsFolder = levelFolder:FindFirstChild("CeilingLamps")
-		if not ceilingLampsFolder then return false end
+	if not moduleCeilingLampsFolder then
+		if not moduleLevelFolder then return false end
+		moduleCeilingLampsFolder = moduleLevelFolder:FindFirstChild("CeilingLamps")
+		if not moduleCeilingLampsFolder then return false end
 	end
-	for _, lampModel in ipairs(ceilingLampsFolder:GetChildren()) do
+	
+	for _, lampModel in ipairs(moduleCeilingLampsFolder:GetChildren()) do
 		if lampModel:IsA("Model") or lampModel:IsA("BasePart") then
 			local light = lampModel:FindFirstChildWhichIsA("Light")
 			if light and light.Enabled then
@@ -285,13 +292,21 @@ local function despawnMonster()
 		local respawnWait = Random.new():NextNumber(CONFIG.RESPAWN_DELAY_MIN, CONFIG.RESPAWN_DELAY_MAX)
 		print(string.format("[MonsterAI] Desapareció. Reaparecerá en %.1f seg.", respawnWait))
 		task.wait(respawnWait)
-		spawnMonster()
+		spawnMonster() -- ¡Reinicia el ciclo!
 	end)
 end
 
--- ---------- SPAWN + FOLLOW ----------
+-- ---------- SPAWN + FOLLOW (MODIFICADO) ----------
 function spawnMonster()
+	if not moduleLevelFolder then 
+		warn("[MonsterAI] Intento de spawn sin levelFolder. Abortando.")
+		return 
+	end
 	if monster or aiState ~= "Idle" then return end
+	if not MONSTER_TEMPLATE then
+		warn("[MonsterAI] ¡ERROR! No se encontró plantilla de monstruo. Abortando.")
+		return
+	end
 
 	local spawnPos = findDarkSpawnPoint()
 	if not spawnPos then return end
@@ -302,13 +317,12 @@ function spawnMonster()
 	lightRaycastParams.FilterDescendantsInstances = {monster} -- excluye al propio monstruo en raycasts
 
 	mon:SetPrimaryPartCFrame(CFrame.new(spawnPos))
-	mon.Parent = levelFolder
+	mon.Parent = moduleLevelFolder -- ¡Usa la variable del módulo!
 
 	local hum = mon:FindFirstChildOfClass("Humanoid")
 	if hum then
 		hum.WalkSpeed = CONFIG.CHASE_SPEED
 		hum.AutoRotate = true
-		-- Solución compatible a “escalones”: sube un poco la cadera
 		hum.HipHeight = CONFIG.HIP_HEIGHT
 	end
 
@@ -320,17 +334,13 @@ function spawnMonster()
 
 	-- Callbacks opcionales
 	if sp.Blocked then
-		sp.Blocked:Connect(function(_idx)
-			-- Se reintentará en el próximo REFRESH_TARGET
-		end)
+		sp.Blocked:Connect(function(_idx) end)
 	end
 	if sp.Stuck then
-		sp.Stuck:Connect(function()
-			-- Se puede aplicar un “nudge” o esperar al siguiente REFRESH_TARGET
-		end)
+		sp.Stuck:Connect(function() end)
 	end
 
-	-- Loop de persecución: refrescar destino sin spamear Run
+	-- Loop de persecución
 	task.spawn(function()
 		currentPathFollower = sp
 		while aiState == "Chasing" and monster == mon and mon.Parent and mon.PrimaryPart do
@@ -342,13 +352,11 @@ function spawnMonster()
 
 			local targetHRP = target.Character.HumanoidRootPart
 
-			-- Si se ilumina, cortar y despawnear
 			if isMonsterLit() then
 				despawnMonster()
 				break
 			end
 
-			-- Acelerón con línea de visión
 			if hum then
 				if hasLineOfSight(mon.PrimaryPart.Position, targetHRP.Position) then
 					hum.WalkSpeed = math.clamp(CONFIG.CHASE_SPEED + CONFIG.LOS_SPEED_BOOST, 0, CONFIG.LOS_MAX_WALKSPEED)
@@ -357,7 +365,6 @@ function spawnMonster()
 				end
 			end
 
-			-- Persecución (SimplePath gestiona path y movimiento fluido)
 			sp:Run(targetHRP)
 
 			task.wait(CONFIG.REFRESH_TARGET)
@@ -371,21 +378,36 @@ function spawnMonster()
 	end)
 end
 
--- ---------- BUCLES PRINCIPALES ----------
--- Chequeo rápido de luz/despawn
-RunService.Heartbeat:Connect(function()
-	if aiState == "Chasing" and isMonsterLit() then
-		despawnMonster()
+-- ============ FUNCIÓN PRINCIPAL DEL MÓDULO ============
+function MonsterAI.Start(levelFolder)
+	if not MONSTER_TEMPLATE then
+		warn(string.format("[MonsterAI] ¡ERROR! No se encontró '%s' en ReplicatedStorage. El módulo no se iniciará.", CONFIG.MONSTER_TEMPLATE_NAME))
+		return
 	end
-end)
+	
+	print("[MonsterAI] Módulo iniciado. Guardando levelFolder.")
+	moduleLevelFolder = levelFolder
+	moduleFloorPart = nil -- Resetear cache
+	moduleCeilingLampsFolder = nil -- Resetear cache
 
--- Inicio (spawn inicial diferido)
-task.spawn(function()
-	print(string.format("[MonsterAI] La Niña aparecerá en %d segundos...", CONFIG.INITIAL_SPAWN_WAIT))
-	findFloor()
-	ceilingLampsFolder = levelFolder:FindFirstChild("CeilingLamps")
-	task.wait(CONFIG.INITIAL_SPAWN_WAIT)
-	spawnMonster()
-end)
+	-- Chequeo rápido de luz/despawn (Movido aquí)
+	RunService.Heartbeat:Connect(function()
+		if aiState == "Chasing" and isMonsterLit() then
+			despawnMonster()
+		end
+	end)
 
-print("[MonsterAI] Script de IA (SimplePath) cargado.")
+	-- Inicio (spawn inicial diferido) (Movido aquí)
+	task.spawn(function()
+		print(string.format("[MonsterAI] La Niña aparecerá en %d segundos...", CONFIG.INITIAL_SPAWN_WAIT))
+		findFloor() -- Carga el floor part
+		moduleCeilingLampsFolder = moduleLevelFolder:FindFirstChild("CeilingLamps") -- Carga las lámparas
+		task.wait(CONFIG.INITIAL_SPAWN_WAIT)
+		spawnMonster()
+	end)
+
+	print("[MonsterAI] Script de IA (SimplePath) cargado y listeners activados.")
+end
+
+
+return MonsterAI

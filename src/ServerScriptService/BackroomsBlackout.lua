@@ -1,11 +1,12 @@
--- ServerScriptService/BackroomsBlackout.server.lua
--- MODIFICADO: Aplica oscuridad global (Lighting),
--- pero ignora por completo las luces individuales (lámparas).
+-- src/ServerScriptService/BackroomsBlackout.lua
+-- CONVERTIDO A MODULESCRIPT
+-- Contiene la función para aplicar la oscuridad total del Backroom.
 
 local Lighting = game:GetService("Lighting")
--- Ya no necesitamos CollectionService
 
--- 1) Oscuridad total (global)
+local BackroomsBlackout = {}
+
+-- 1) La función original de oscuridad
 local function applyBlackout()
 	Lighting.ClockTime = 2            -- irrelevante con brillo 0, pero por si acaso
 	Lighting.Brightness = 0
@@ -19,7 +20,6 @@ local function applyBlackout()
 	Lighting.FogEnd = 1000000          -- usa negrura por exposición/ambient, no niebla densa cercana
 	
     -- Quita efectos de brillo/tonemapping si los hay
-    -- (Corregí un error de tu script original, que los ponía en 'true' en lugar de 'false')
 	for _, eff in ipairs(Lighting:GetChildren()) do
 		if eff:IsA("BloomEffect") or eff:IsA("SunRaysEffect") or eff:IsA("ColorCorrectionEffect") then
 			eff.Enabled = false
@@ -27,13 +27,12 @@ local function applyBlackout()
 	end
 end
 
--- Aplicar la oscuridad global al iniciar
-applyBlackout()
+-- 2) Nueva función "Apply" que será llamada por el Generador
+function BackroomsBlackout.Apply()
+	print("[Blackout] Aplicando oscuridad total del Backroom.")
+	applyBlackout()
+end
 
--- 2) SECCIÓN ELIMINADA
--- Ya no se incluye la lógica 'isAllowed' ni 'enforceLight'.
--- Este script ya no vigila ni apaga las luces individuales.
--- Las lámparas (con tag "AllowLight") se quedarán como estén (encendidas si la plantilla lo está).
+-- (Eliminamos la llamada original applyBlackout() de aquí)
 
--- 3) (Opcional) si quieres desactivar sombras globales para ganar FPS en negro:
--- Lighting.GlobalShadows = false
+return BackroomsBlackout
