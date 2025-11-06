@@ -37,6 +37,11 @@ local CONFIG = {
 	DOOR_WIDTH = 6,
 	DOOR_HEIGHT = 12,
 	DOOR_THICK = 1,
+	
+	-- ==== ¡NUEVAS LÍNEAS DE CONFIG! ====
+	KEYS_REQUIRED = 3, -- Cuántas llaves necesita la puerta
+	EXTRA_KEYS = 2,    -- Cuántas llaves extra spawnear (Total = 5)
+	-- ===================================
 }
 
 -- ========= RNG =========
@@ -123,7 +128,7 @@ Door.PlaceLightDoor(CONFIG, build, levelModel, levelFolder, {
 	prompt = true,        -- interacción manual
 	
 	-- ==== (LÍNEA MODIFICADA) ====
-	keysRequired = 3,     -- Define cuántas llaves se necesitan (el nombre por defecto será "Key")
+	keysRequired = CONFIG.KEYS_REQUIRED, -- Usa la variable de la CONFIG
 	-- ==========================
 
 	intensity = 2.5,      -- luz suave
@@ -142,10 +147,7 @@ end
 local spawnCF
 do
 	if build and build.entranceCell then
-		-- ==== ¡LÍNEA CORREGIDA AQUÍ! ====
 		local center = Util.CellCenter(CONFIG, build.entranceCell.X, build.entranceCell.Z)
-		-- ================================
-		
 		local pos = center + inwardOffset(build.entranceEdge, CONFIG.CELL_SIZE.X*0.5, CONFIG.CELL_SIZE.Y*0.5) + Vector3.new(0, 2.5, 0)
 
 		local spawn = workspace:FindFirstChild("BackroomsSpawn") or Instance.new("SpawnLocation")
@@ -192,7 +194,7 @@ do
 
 	-- (Opcional) Si falla lo físico, puedes abrir la puerta automáticamente:
 	-- if okGrid and not okPhys then
-	--     OpenExit:Fire()  -- <-- ¡ERROR CORREGIDO! (Cambiado '//' por '--')
+	--     OpenExit:Fire()
 	-- end
 end
 
@@ -201,7 +203,12 @@ print(string.format(
 	CONFIG.GRID_W, CONFIG.GRID_H, CONFIG.CELL_SIZE.X, CONFIG.CELL_SIZE.Y, CONFIG.WALL_HEIGHT
 	))
 
--- ============ ¡NUEVA LÍNEA AQUÍ! ============
--- Llama al spawner de linternas AHORA que el suelo está 100% terminado.
+-- ============ SPAWN DE ITEMS (MODIFICADO) ============
+
+-- Llama al spawner de linternas
 require(script.Parent:WaitForChild("ScatterFlashlights")).Run()
--- ==========================================
+
+-- Llama al spawner de llaves
+local keyCount = (CONFIG.KEYS_REQUIRED or 3) + (CONFIG.EXTRA_KEYS or 0)
+require(script.Parent:WaitForChild("ScatterKeys")).Run(keyCount)
+-- ===================================================
