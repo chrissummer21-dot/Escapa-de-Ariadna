@@ -26,7 +26,7 @@ local CONFIG = {
 	FADE_OUT_DURATION = 1.0,
 
 	-- 3) Combate y Movimiento
-	CHASE_SPEED = 5,
+	CHASE_SPEED =40,
 	FLEE_SPEED = 25,
 	DAMAGE_AMOUNT = 25,
 	ATTACK_COOLDOWN = 2,
