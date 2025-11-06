@@ -122,9 +122,9 @@ Door.PlaceLightDoor(CONFIG, build, levelModel, levelFolder, {
 	gap = 2,              -- separa la puerta hacia el interior del backroom
 	prompt = true,        -- interacción manual
 	
-	-- ==== (NUEVA LÍNEA) ====
-	keysRequired = 3,     -- Define cuántas llaves se necesitan
-	-- =======================
+	-- ==== (LÍNEA MODIFICADA) ====
+	keysRequired = 3,     -- Define cuántas llaves se necesitan (el nombre por defecto será "Key")
+	-- ==========================
 
 	intensity = 2.5,      -- luz suave
 	range = 20,
@@ -142,7 +142,10 @@ end
 local spawnCF
 do
 	if build and build.entranceCell then
+		-- ==== ¡LÍNEA CORREGIDA AQUÍ! ====
 		local center = Util.CellCenter(CONFIG, build.entranceCell.X, build.entranceCell.Z)
+		-- ================================
+		
 		local pos = center + inwardOffset(build.entranceEdge, CONFIG.CELL_SIZE.X*0.5, CONFIG.CELL_SIZE.Y*0.5) + Vector3.new(0, 2.5, 0)
 
 		local spawn = workspace:FindFirstChild("BackroomsSpawn") or Instance.new("SpawnLocation")

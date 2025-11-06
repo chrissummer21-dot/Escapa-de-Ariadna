@@ -1,7 +1,6 @@
--- src/client/init.client.luau
+-- src/StarterPlayer/StarterPlayerScripts/ToastManager.client.lua
 -- Este script ahora maneja la creación de un "toast"
 -- que se activa por un RemoteEvent desde el servidor.
-
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
@@ -33,6 +32,7 @@ textLabel.BorderMode = Enum.BorderMode.Outline
 textLabel.BorderSizePixel = 1
 
 -- (IMPORTANTE) Posición y Tamaño usando 'Scale' para adaptarse a cualquier resolución
+-- ==== CORRECCIÓN 1: Comentario en una sola línea ====
 textLabel.AnchorPoint = Vector2.new(0.5, 1) -- Anclado abajo y al centro
 textLabel.Size = UDim2.new(0.4, 0, 0.08, 0) -- 40% ancho, 8% alto
 textLabel.Position = UDim2.new(0.5, 0, 0.9, 0) -- 50% centro X, 90% abajo Y
@@ -67,6 +67,7 @@ local isShowing = false -- Debounce para evitar spamear
 
 -- 4. Conectar el evento
 showToastEvent.OnClientEvent:Connect(function(message)
+	-- ==== CORRECCIÓN 2: 'if' en una sola línea ====
 	if isShowing then return end -- Evitar que se pise
 	
 	isShowing = true
@@ -83,4 +84,4 @@ showToastEvent.OnClientEvent:Connect(function(message)
 	isShowing = false
 end)
 
-print("ToastManager.client.luau cargado.")
+print("ToastManager.client.lua cargado.")
