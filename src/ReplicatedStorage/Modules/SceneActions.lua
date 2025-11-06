@@ -1,7 +1,9 @@
 -- src/ReplicatedStorage/Modules/SceneActions.lua
--- Contiene la lógica para CADA tipo de acción del timeline. (CON DEBUG PRINTS)
+-- Contiene la lógica para CADA tipo de acción del timeline.
+-- MODIFICADO: Añadida la categoría 'sound' para reproducir música.
 
 local CollectionService = game:GetService("CollectionService")
+local SoundService = game:GetService("SoundService") -- <-- ¡NUEVO SERVICIO!
 
 local SceneActions = {}
 
@@ -64,9 +66,34 @@ function SceneActions.Execute(action, params)
 			
 		end
 	
-	-- ======= OTRAS SECCIONES ... =======
+	-- ======= SECCIÓN DE SONIDO (MODIFICADA) =======
 	elseif category == "sound" then
-		warn(string.format("[SceneActions] Categoría '%s' aún no implementada.", category))
+		
+		if not params.soundName then
+			warn("[SceneActions] Acción 'sound' llamada sin 'params.soundName'")
+			return
+		end
+
+		local sound = SoundService:FindFirstChild(params.soundName)
+		if not sound or not sound:IsA("Sound") then
+			warn(string.format("[SceneActions] No se encontró el sonido en SoundService: %s", params.soundName))
+			return
+		end
+
+		if command == "play" then
+			print("[SceneActions] Reproduciendo sonido: " .. sound.Name)
+			sound:Play()
+			
+		elseif command == "stop" then
+			print("[SceneActions] Deteniendo sonido: " .. sound.Name)
+			sound:Stop()
+			
+		elseif command == "pause" then
+			print("[SceneActions] Pausando sonido: " .. sound.Name)
+			sound:Pause()
+		end
+		
+	-- ======= OTRAS SECCIONES ... =======
 	elseif category == "event" then
 		warn(string.format("[SceneActions] Categoría '%s' aún no implementada.", category))
 	end

@@ -13,7 +13,7 @@ local LEVEL_FOLDER_NAME = "Level0"
 local LEVEL_MODEL_NAME = "Level0Model"
 local TARGET_FLOOR_NAME = "Floor" 
 
-local ITEM_COUNT = 30 
+local ITEM_COUNT = 4 
 local FLOAT_ABOVE_FLOOR = 3.0 -- A qué altura aparecen (antes de caer)
 local ITEM_MIN_SPACING = 20 
 local ITEM_WALL_CLEARANCE = 2 
