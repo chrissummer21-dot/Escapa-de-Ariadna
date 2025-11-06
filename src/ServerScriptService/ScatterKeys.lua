@@ -16,7 +16,7 @@ local TARGET_FLOOR_NAME = "Floor"
 -- (La cantidad se pasa ahora como argumento en la función Run)
 
 local FLOAT_ABOVE_FLOOR = 2.5 -- Altura a la que spawnea (ligeramente diferente a las linternas)
-local ITEM_MIN_SPACING = 20 
+local ITEM_MIN_SPACING = 100 
 local ITEM_WALL_CLEARANCE = 2 
 local EDGE_MARGIN = 5 
 local ROTATE_IN_90_STEPS = false -- Las llaves no necesitan rotación aleatoria

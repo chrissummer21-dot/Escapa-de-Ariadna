@@ -40,7 +40,7 @@ local CONFIG = {
 	
 	-- ==== ¡NUEVAS LÍNEAS DE CONFIG! ====
 	KEYS_REQUIRED = 3, -- Cuántas llaves necesita la puerta
-	EXTRA_KEYS = 2,    -- Cuántas llaves extra spawnear (Total = 5)
+	EXTRA_KEYS = 0,    -- Cuántas llaves extra spawnear (Total = 5)
 	-- ===================================
 }
 
