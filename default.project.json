@@ -11,11 +11,6 @@
       "Modules": {
         "$path": "src/ReplicatedStorage/Modules",
         "$ignoreUnknownInstances": true
-      },
-
-      "Configs": {
-        "$path": "src/ReplicatedStorage/Configs",
-        "$ignoreUnknownInstances": true
       }
     },
 
@@ -23,6 +18,17 @@
       "$className": "ServerScriptService",
       "$path": "src/ServerScriptService",
       "$ignoreUnknownInstances": true
+    },
+
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "$ignoreUnknownInstances": true,
+
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "$path": "src/StarterPlayer/StarterPlayerScripts",
+        "$ignoreUnknownInstances": true
+      }
     }
   }
 }

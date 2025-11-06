@@ -275,3 +275,10 @@ while placed < LAMP_COUNT and tries > 0 do
 end
 
 print(string.format("[ScatterCeilingLamps] Colocadas %d lámparas (solicitadas %d).", placed, LAMP_COUNT))
+
+-- ============ LÍNEAS CORREGIDAS ============
+-- Ahora es un ModuleScript. Lo 'requerimos' y LUEGO 'llamamos' a su función.
+print("[ScatterCeilingLamps] Llamando al SceneController...")
+
+local SceneController = require(script.Parent:WaitForChild("SceneController"))
+SceneController.StartTimeline()

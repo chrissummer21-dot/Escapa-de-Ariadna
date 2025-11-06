@@ -120,12 +120,16 @@ Ceiling.Place(CONFIG, build, levelModel, levelFolder)
 -- ========= 4) PUERTA DE LUZ (blanca, Neon) SIN perforar muros =========
 Door.PlaceLightDoor(CONFIG, build, levelModel, levelFolder, {
 	gap = 2,              -- separa la puerta hacia el interior del backroom
-	prompt = true,        -- interacción manual; si luego solo por tareas, usa false y OpenExit:Fire()
+	prompt = true,        -- interacción manual
+	
+	-- ==== (NUEVA LÍNEA) ====
+	keysRequired = 3,     -- Define cuántas llaves se necesitan
+	-- =======================
+
 	intensity = 2.5,      -- luz suave
 	range = 20,
 	useSurfaceLight = true,
 })
-
 -- ========= 5) Spawn interno + respawn =========
 local function inwardOffset(edge, halfX, halfZ)
 	if edge == "N" then return Vector3.new(0, 0,  halfZ - 2)
@@ -193,3 +197,8 @@ print(string.format(
 	"[Backrooms] OK | Grid=%dx%d | Cell=(%.1f,%.1f) | WallH=%d | Modules: Walls->Floor->Ceiling->Door | Spawn invisible",
 	CONFIG.GRID_W, CONFIG.GRID_H, CONFIG.CELL_SIZE.X, CONFIG.CELL_SIZE.Y, CONFIG.WALL_HEIGHT
 	))
+
+-- ============ ¡NUEVA LÍNEA AQUÍ! ============
+-- Llama al spawner de linternas AHORA que el suelo está 100% terminado.
+require(script.Parent:WaitForChild("ScatterFlashlights")).Run()
+-- ==========================================

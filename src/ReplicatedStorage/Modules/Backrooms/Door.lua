@@ -1,22 +1,13 @@
--- TODO: paste code here
 -- ReplicatedStorage/Modules/Backrooms/Door.lua
--- Puerta tipo â€œluz blancaâ€ Neon + luz suave adicional.
--- Coloca la puerta ligeramente hacia el interior (gap) sin perforar muros.
+-- MODIFICADO: Usa un RemoteEvent para enviar un "toast" al cliente
+-- en lugar de cambiar el ObjectText.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local Door = {}
 
--- options:
---   gap (number)                -> desplazamiento hacia adentro (default 2)
---   prompt (bool)               -> ProximityPrompt para abrir (default true)
---   intensity (number)          -> brillo de la luz (default 2.5)
---   range (number)              -> alcance de la luz (default 20)
---   useSurfaceLight (bool)      -> true = SurfaceLight (direccional), false = PointLight (omni). (default true)
---   color (Color3)              -> color del panel Neon (default blanco)
---   openBySignalOnly (bool)     -> si true, no crea prompt y solo abre con BackroomsSignals.OpenExit
-
+-- (NUEVO) Modificamos getSignals para que también maneje el RemoteEvent
 local function getSignals()
 	local signals = ReplicatedStorage:FindFirstChild("BackroomsSignals")
 	if not signals then
@@ -24,13 +15,23 @@ local function getSignals()
 		signals.Name = "BackroomsSignals"
 		signals.Parent = ReplicatedStorage
 	end
-	local ev = signals:FindFirstChild("OpenExit")
-	if not ev then
-		ev = Instance.new("BindableEvent")
-		ev.Name = "OpenExit"
-		ev.Parent = signals
+	
+	local openExit = signals:FindFirstChild("OpenExit")
+	if not openExit then
+		openExit = Instance.new("BindableEvent")
+		openExit.Name = "OpenExit"
+		openExit.Parent = signals
 	end
-	return signals, ev
+	
+	-- (NUEVO) Añadir el RemoteEvent para los mensajes toast
+	local showToast = signals:FindFirstChild("ShowToastMessage")
+	if not showToast then
+		showToast = Instance.new("RemoteEvent")
+		showToast.Name = "ShowToastMessage"
+		showToast.Parent = signals
+	end
+	
+	return signals, openExit, showToast
 end
 
 function Door.PlaceLightDoor(cfg, build, levelModel, levelFolder, options)
@@ -39,8 +40,11 @@ function Door.PlaceLightDoor(cfg, build, levelModel, levelFolder, options)
 	local usePrompt   = (options.prompt ~= false) and (options.openBySignalOnly ~= true)
 	local intensity   = options.intensity or 2.5
 	local range       = options.range or 20
-	local useSurface  = (options.useSurfaceLight ~= false) -- default true
+	local useSurface  = (options.useSurfaceLight ~= false)
 	local neonColor   = options.color or Color3.fromRGB(255,255,255)
+	
+	local keysRequired = options.keysRequired or 3
+	local keyName      = options.keyName or "Key"
 
 	if not build or not build.exitCell then return nil end
 
@@ -54,14 +58,13 @@ function Door.PlaceLightDoor(cfg, build, levelModel, levelFolder, options)
 	local center = cellCenter(build.exitCell.X, build.exitCell.Z)
 	local halfX, halfZ = cfg.CELL_SIZE.X * 0.5, cfg.CELL_SIZE.Y * 0.5
 
-	-- Panel NEON (blanco) como puerta
 	local door = Instance.new("Part")
 	door.Name = "GlitchLightDoor"
 	door.Anchored = true
 	door.CanCollide = true
 	door.Material = Enum.Material.Neon
-	door.Color = neonColor             -- Neon blanco
-	door.Transparency = 0.2            -- un poco mÃ¡s suave que 0.1
+	door.Color = neonColor
+	door.Transparency = 0.2
 	door.CastShadow = false
 
 	local edge = build.exitEdge or "S"
@@ -85,17 +88,16 @@ function Door.PlaceLightDoor(cfg, build, levelModel, levelFolder, options)
 
 	door.Parent = parentTarget()
 
-	-- Luz suave blanca adicional
+	-- ... (Lógica de la luz, sin cambios) ...
 	if useSurface then
 		local sl = Instance.new("SurfaceLight")
 		sl.Brightness = intensity
 		sl.Range = range
 		sl.Color = Color3.fromRGB(255,255,255)
-		-- orienta hacia el interior del pasillo segÃºn el borde
-		if edge == "N" then sl.Face = Enum.NormalId.Back      -- emite hacia +Z
-		elseif edge == "S" then sl.Face = Enum.NormalId.Front -- emite hacia -Z
-		elseif edge == "W" then sl.Face = Enum.NormalId.Right -- emite hacia +X
-		elseif edge == "E" then sl.Face = Enum.NormalId.Left  -- emite hacia -X
+		if edge == "N" then sl.Face = Enum.NormalId.Back
+		elseif edge == "S" then sl.Face = Enum.NormalId.Front
+		elseif edge == "W" then sl.Face = Enum.NormalId.Right
+		elseif edge == "E" then sl.Face = Enum.NormalId.Left
 		end
 		sl.Parent = door
 	else
@@ -106,7 +108,6 @@ function Door.PlaceLightDoor(cfg, build, levelModel, levelFolder, options)
 		pl.Parent = door
 	end
 
-	-- Abrir (desvanecer y quitar colisiÃ³n)
 	local opening = false
 	local function open()
 		if opening then return end
@@ -117,19 +118,63 @@ function Door.PlaceLightDoor(cfg, build, levelModel, levelFolder, options)
 		t1:Play(); t1.Completed:Wait(); t2:Play()
 	end
 
-	-- InteracciÃ³n manual (si no se fuerza solo por seÃ±al)
+	local keysInserted = Instance.new("IntValue")
+	keysInserted.Name = "KeysInserted"
+	keysInserted.Value = 0
+	keysInserted.Parent = door
+
+	-- (MODIFICADO) Obtener el nuevo RemoteEvent
+	local _, OpenExit, ShowToastMessage = getSignals()
+
 	if usePrompt then
 		local prompt = Instance.new("ProximityPrompt")
-		prompt.ActionText = "Entrar"
-		prompt.ObjectText = "Luz"
+		prompt.ActionText = "Interactuar"
+		prompt.ObjectText = string.format("Abrir (%d/%d)", 0, keysRequired)
 		prompt.HoldDuration = 0.3
 		prompt.MaxActivationDistance = 9
 		prompt.Parent = door
-		prompt.Triggered:Connect(open)
+
+		keysInserted.Changed:Connect(function(newValue)
+			if newValue < keysRequired then
+				prompt.ObjectText = string.format("Abrir (%d/%d)", newValue, keysRequired)
+			else
+				prompt.ObjectText = "Abierto"
+				prompt.Enabled = false
+			end
+		end)
+
+		prompt.Triggered:Connect(function(player)
+			if opening or keysInserted.Value >= keysRequired then return end
+
+			local keyTool = player.Backpack:FindFirstChild(keyName)
+			if not keyTool then
+				keyTool = player.Character:FindFirstChild(keyName)
+			end
+
+			if keyTool then
+				keyTool:Destroy()
+				keysInserted.Value = keysInserted.Value + 1
+				if keysInserted.Value >= keysRequired then
+					open()
+				end
+			else
+				-- (INICIO DE MODIFICACIÓN)
+				-- 4. No tiene llave: Disparar el RemoteEvent al cliente
+				local remaining = keysRequired - keysInserted.Value
+				local message = ""
+				if remaining > 1 then
+					message = string.format("Necesitas %d llaves más", remaining)
+				else
+					message = "Necesitas 1 llave más"
+				end
+				
+				-- Dispara el evento SOLO a ese jugador
+				ShowToastMessage:FireClient(player, message)
+				-- (FIN DE MODIFICACIÓN)
+			end
+		end)
 	end
 
-	-- SeÃ±al para abrir por tareas
-	local _, OpenExit = getSignals()
 	OpenExit.Event:Connect(open)
 
 	return door
